@@ -1,51 +1,65 @@
+From 47b2866e3508553583456cafcc3b2d3064749897 Mon Sep 17 00:00:00 2001
+From: shaoyuyoung <shaoyuyoung@gmail.com>
+Date: Wed, 24 Apr 2024 14:10:04 +0800
+Subject: [PATCH] add the coverage track
+
+---
+ CMakeLists.txt                     |  7 +++++++
+ cmake/config.cmake                 |  2 +-
+ cmake/modules/contrib/Memcov.cmake | 18 ++++++++++++++++++
+ python/tvm/contrib/coverage.py     | 25 +++++++++++++++++++++++++
+ 4 files changed, 51 insertions(+), 1 deletion(-)
+ create mode 100644 cmake/modules/contrib/Memcov.cmake
+ create mode 100644 python/tvm/contrib/coverage.py
+
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 24f0653b3..04c8bb563 100644
+index 683ce819d..16d360bfe 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -22,6 +22,7 @@ endif()
+@@ -26,6 +26,7 @@ endif()
  # You can create a config.cmake at build folder
  # and add set(OPTION VALUE) to override these build options.
  # Alernatively, use cmake -DOPTION=VALUE through command-line.
 +tvm_option(USE_COV "Build with coverage" ON)
  tvm_option(USE_CUDA "Build with CUDA" OFF)
- tvm_option(USE_OPENCL "Build with OpenCL" OFF)
- tvm_option(USE_VULKAN "Build with Vulkan" OFF)
-@@ -447,6 +448,7 @@ include(cmake/modules/contrib/Verilator.cmake)
- include(cmake/modules/Git.cmake)
+ tvm_option(USE_NCCL "Build with NCCL" OFF)
+ tvm_option(USE_MSCCL "Build with MSCCL" OFF)
+@@ -592,6 +593,7 @@ include(cmake/modules/Git.cmake)
  include(cmake/modules/LibInfo.cmake)
  include(cmake/modules/RustExt.cmake)
+ include(cmake/modules/contrib/Mrvl.cmake)
 +include(cmake/modules/contrib/Memcov.cmake)
  
- include(CheckCXXCompilerFlag)
- if(NOT MSVC)
-@@ -495,6 +497,11 @@ include(cmake/modules/Logging.cmake)
+ set(LIBINFO_FILE ${CMAKE_CURRENT_LIST_DIR}/src/support/libinfo.cc)
+ add_lib_info(${LIBINFO_FILE})
+@@ -659,6 +661,11 @@ include(cmake/modules/Logging.cmake)
  
  include(cmake/modules/contrib/PAPI.cmake)
  
 +if(USE_COV)
-+  target_compile_options(tvm_objs PRIVATE -fsanitize-coverage=trace-pc)
-+  target_compile_options(tvm_runtime_objs PRIVATE -fsanitize-coverage=trace-pc)
++  target_compile_options(tvm_objs PRIVATE -fsanitize-coverage=trace-pc-guard)
++  target_compile_options(tvm_runtime_objs PRIVATE -fsanitize-coverage=trace-pc-guard)
 +endif()
 +
  if(USE_MICRO)
    # NOTE: cmake doesn't track dependencies at the file level across subdirectories. For the
    # Unix Makefiles generator, need to add these explicit target-level dependency)
 diff --git a/cmake/config.cmake b/cmake/config.cmake
-index 1fce11f90..ab85599d4 100644
+index ccb449fe2..f87dc0524 100644
 --- a/cmake/config.cmake
 +++ b/cmake/config.cmake
-@@ -122,7 +122,7 @@ set(USE_MICRO_STANDALONE_RUNTIME OFF)
+@@ -164,7 +164,7 @@ set(USE_MICRO_STANDALONE_RUNTIME OFF)
  # - OFF: disable llvm, note this will disable CPU codegen
  #        which is needed for most cases
  # - /path/to/llvm-config: enable specific LLVM when multiple llvm-dev is available.
 -set(USE_LLVM OFF)
 +set(USE_LLVM ON)
  
- #---------------------------------------------
- # Contrib libraries
+ # Whether use MLIR to help analyze, requires USE_LLVM is enabled
+ # Possible values: ON/OFF
 diff --git a/cmake/modules/contrib/Memcov.cmake b/cmake/modules/contrib/Memcov.cmake
 new file mode 100644
-index 000000000..d8f7965ee
+index 000000000..f37c006a6
 --- /dev/null
 +++ b/cmake/modules/contrib/Memcov.cmake
 @@ -0,0 +1,18 @@
@@ -70,7 +84,7 @@ index 000000000..d8f7965ee
 \ No newline at end of file
 diff --git a/python/tvm/contrib/coverage.py b/python/tvm/contrib/coverage.py
 new file mode 100644
-index 000000000..b11ccdeb6
+index 000000000..11a12fa25
 --- /dev/null
 +++ b/python/tvm/contrib/coverage.py
 @@ -0,0 +1,25 @@
@@ -99,3 +113,7 @@ index 000000000..b11ccdeb6
 +def set_hitmap(data):
 +    assert len(data) == get_total()
 +    _LIB.mcov_set_hitmap(_char_array.from_buffer(data))
+\ No newline at end of file
+-- 
+2.17.1
+
