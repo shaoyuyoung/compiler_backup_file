@@ -53,7 +53,7 @@ index ccb449fe2..f87dc0524 100644
  #        which is needed for most cases
  # - /path/to/llvm-config: enable specific LLVM when multiple llvm-dev is available.
 -set(USE_LLVM OFF)
-+set(USE_LLVM ON)
++set(USE_LLVM /root/anaconda3/envs/nnsmith/bin/llvm-config)
  
  # Whether use MLIR to help analyze, requires USE_LLVM is enabled
  # Possible values: ON/OFF
